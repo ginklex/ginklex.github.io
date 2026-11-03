@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ginklex | Game Hub</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0b0d14;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    height: 75px;
+    padding: 0 8%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #111420;
+    border-bottom: 1px solid #252a3b;
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: bold;
+    color: #9b8cff;
+}
+
+nav a {
+    color: #aaa;
+    text-decoration: none;
+    margin-left: 25px;
+    font-size: 14px;
+}
+
+nav a:hover {
+    color: white;
+}
+
+.hero {
+    margin: 45px auto;
+    width: 84%;
+    min-height: 300px;
+    border-radius: 18px;
+    padding: 55px;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(110deg, #292052, #171b32 65%, #101521);
+    border: 1px solid #39305f;
+}
+
+.hero-content {
+    max-width: 550px;
+}
+
+.tag {
+    color: #b6aaff;
+    font-size: 12px;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+h1 {
+    font-size: 48px;
+    margin: 15px 0;
+}
+
+.hero p {
+    color: #c2c1d1;
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+.play-button {
+    display: inline-block;
+    padding: 13px 28px;
+    background: #8b75ff;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.play-button:hover {
+    background: #a18fff;
+    transform: translateY(-2px);
+}
+
+section {
+    width: 84%;
+    margin: 55px auto;
+}
+
+.section-title {
+    font-size: 23px;
+    margin-bottom: 22px;
+}
+
+.games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 20px;
+}
+
+.game {
+    background: #151925;
+    border: 1px solid #252b3c;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.2s;
+}
+
+.game:hover {
+    transform: translateY(-5px);
+    border-color: #8875ff;
+}
+
+.game-image {
+    height: 135px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    background: linear-gradient(135deg, #29234e, #171c30);
+}
+
+.game-info {
+    padding: 17px;
+}
+
+.game-info h3 {
+    margin-bottom: 8px;
+}
+
+.game-info p {
+    color: #858b9f;
+    font-size: 13px;
+}
+
+.status {
+    display: inline-block;
+    margin-top: 13px;
+    font-size: 11px;
+    color: #a99aff;
+    background: #29234a;
+    padding: 5px 9px;
+    border-radius: 5px;
+}
+
+footer {
+    text-align: center;
+    padding: 30px;
+    color: #626879;
+    border-top: 1px solid #252a3b;
+    font-size: 12px;
+}
+
+@media(max-width: 600px) {
+    header {
+        padding: 0 5%;
+    }
+    nav a {
+        margin-left: 10px;
+    }
+    .hero {
+        padding: 30px;
+        width: 90%;
+    }
+    h1 {
+        font-size: 34px;
+    }
+    section {
+        width: 90%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">ginklex.</div>
+    <nav>
+        <a href="#">Home</a>
+        <a href="#games">Games</a>
+    </nav>
+</header>
+
+<div class="hero">
+    <div class="hero-content">
+        <div class="tag">WELCOME TO GINKLEX</div>
+        <h1>PLAY SOMETHING.</h1>
+        <p>
+            Your little corner of the internet for browser gaming.
+            Pick a game, jump in, and have fun.
+        </p>
+        <a href="#games" class="play-button">Browse Games →</a>
+    </div>
+</div>
+
+<section id="games">
+    <h2 class="section-title">Game Library</h2>
+
+    <div class="games">
+
+        <div class="game">
+            <div class="game-image">🏎️</div>
+            <div class="game-info">
+                <h3>Mario Kart DS</h3>
+                <p>Nintendo DS racing</p>
+                <span class="status">COMING SOON</span>
+            </div>
+        </div>
+
+        <div class="game">
+            <div class="game-image">🎮</div>
+            <div class="game-info">
+                <h3>More Games</h3>
+                <p>More games are on the way.</p>
+                <span class="status">COMING SOON</span>
+            </div>
+        </div>
+
+        <div class="game">
+            <div class="game-image">🕹️</div>
+            <div class="game-info">
+                <h3>More Games</h3>
+                <p>New games will be added here.</p>
+                <span class="status">COMING SOON</span>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<footer>
+    ginklex. · made for gaming
+</footer>
+
+</body>
+</html>
