@@ -15,59 +15,63 @@
 
 html {
     scroll-behavior: smooth;
+    background: #182421;
 }
 
 body {
- 
-body {
-    background: #182421;
+    background: transparent;
     color: #f2eee5;
     font-family: Arial, sans-serif;
+    min-height: 100vh;
     position: relative;
     isolation: isolate;
 }
 
+/* background image */
 body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-image: url("background.png");
+    background-image: url("./background.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     filter: brightness(0.55);
+    pointer-events: none;
 }
 
-}
-
+/* navigation */
 header {
     height: 75px;
     padding: 0 8%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #111420;
-    border-bottom: 1px solid #252a3b;
+    background: rgba(28, 43, 38, 0.92);
+    border-bottom: 1px solid #526b5e;
+    backdrop-filter: blur(10px);
 }
 
 .logo {
     font-size: 27px;
     font-weight: bold;
-    color: #9b8cff;
+    color: #c4d5bd;
 }
 
 nav a {
-    color: #aaa;
+    color: #d0d8cc;
     text-decoration: none;
     margin-left: 25px;
     font-size: 14px;
+    transition: 0.2s;
 }
 
 nav a:hover {
-    color: white;
+    color: #a9d5bd;
 }
 
+/* featured section */
 .hero {
     margin: 45px auto;
     width: 84%;
@@ -76,8 +80,9 @@ nav a:hover {
     padding: 55px;
     display: flex;
     align-items: center;
-    background: linear-gradient(110deg, #292052, #171b32 65%, #101521);
-    border: 1px solid #39305f;
+    background: rgba(28, 43, 38, 0.84);
+    border: 1px solid #526b5e;
+    backdrop-filter: blur(8px);
 }
 
 .hero-content {
@@ -85,7 +90,7 @@ nav a:hover {
 }
 
 .tag {
-    color: #b6aaff;
+    color: #c4d5bd;
     font-size: 12px;
     letter-spacing: 2px;
     font-weight: bold;
@@ -94,10 +99,11 @@ nav a:hover {
 h1 {
     font-size: 48px;
     margin: 15px 0;
+    color: #f2eee5;
 }
 
 .hero p {
-    color: #c2c1d1;
+    color: #d5ded5;
     line-height: 1.7;
     margin-bottom: 25px;
 }
@@ -105,8 +111,8 @@ h1 {
 .play-button {
     display: inline-block;
     padding: 13px 28px;
-    background: #8b75ff;
-    color: white;
+    background: #91ad9a;
+    color: #182421;
     text-decoration: none;
     border-radius: 8px;
     font-weight: bold;
@@ -114,10 +120,11 @@ h1 {
 }
 
 .play-button:hover {
-    background: #a18fff;
+    background: #b4ceb9;
     transform: translateY(-2px);
 }
 
+/* game library */
 section {
     width: 84%;
     margin: 55px auto;
@@ -126,6 +133,7 @@ section {
 .section-title {
     font-size: 23px;
     margin-bottom: 22px;
+    color: #f2eee5;
 }
 
 .games {
@@ -135,16 +143,17 @@ section {
 }
 
 .game {
-    background: #151925;
-    border: 1px solid #252b3c;
+    background: rgba(28, 43, 38, 0.90);
+    border: 1px solid #526b5e;
     border-radius: 12px;
     overflow: hidden;
     transition: 0.2s;
+    backdrop-filter: blur(8px);
 }
 
 .game:hover {
     transform: translateY(-5px);
-    border-color: #8875ff;
+    border-color: #a9cbb4;
 }
 
 .game-image {
@@ -153,7 +162,7 @@ section {
     align-items: center;
     justify-content: center;
     font-size: 55px;
-    background: linear-gradient(135deg, #29234e, #171c30);
+    background: rgba(91, 119, 102, 0.35);
 }
 
 .game-info {
@@ -162,10 +171,11 @@ section {
 
 .game-info h3 {
     margin-bottom: 8px;
+    color: #f2eee5;
 }
 
 .game-info p {
-    color: #858b9f;
+    color: #c0cec1;
     font-size: 13px;
 }
 
@@ -173,17 +183,19 @@ section {
     display: inline-block;
     margin-top: 13px;
     font-size: 11px;
-    color: #a99aff;
-    background: #29234a;
+    color: #d1e4d1;
+    background: rgba(100, 139, 111, 0.35);
     padding: 5px 9px;
     border-radius: 5px;
 }
 
+/* footer */
 footer {
     text-align: center;
     padding: 30px;
-    color: #626879;
-    border-top: 1px solid #252a3b;
+    color: #d0d8cc;
+    background: rgba(28, 43, 38, 0.85);
+    border-top: 1px solid #526b5e;
     font-size: 12px;
 }
 
