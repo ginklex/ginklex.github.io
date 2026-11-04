@@ -376,7 +376,8 @@ function buildEmulatorControls() {
     Object.keys(buttonIndex).forEach(button => {
         player0[buttonIndex[button]] = { value: keyMap[button] };
     });
-    return { 0: player0 };
+    /* the emulator expects an entry for all four players */
+    return { 0: player0, 1: {}, 2: {}, 3: {} };
 }
 
 romInput.addEventListener("change", function() {
@@ -404,6 +405,8 @@ romInput.addEventListener("change", function() {
 
     /* use the keys chosen in the controls menu */
     window.EJS_defaultControls = buildEmulatorControls();
+
+    /* start automatically once loaded */
     window.EJS_startOnLoaded = true;
 
     const script = document.createElement("script");
