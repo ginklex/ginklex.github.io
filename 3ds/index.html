@@ -65,7 +65,7 @@ button:disabled { opacity:.5; cursor:wait; }
 <script>
 const input = document.getElementById('rom');
 const status = document.getElementById('status');
-let gameURL;
+
 (async () => {
     if (!window.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
         status.textContent = 'Preparing browser threading. This page may reload once. If it stays here, allow service workers for this site and refresh.';
@@ -89,12 +89,11 @@ input.addEventListener('change', () => {
     }
     input.disabled = true;
     status.textContent = 'Loading emulator… large games may take time.';
-    gameURL = URL.createObjectURL(file);
     window.EJS_player = '#game';
     window.EJS_core = '3ds';
     window.EJS_threads = true;
     window.EJS_pathtodata = '../emulator3ds/';
-    window.EJS_gameUrl = gameURL;
+    window.EJS_gameUrl = file;
     window.EJS_gameName = file.name;
     window.EJS_onGameStart = () => { status.textContent = 'Game running.'; };
     const loader = document.createElement('script');
@@ -106,7 +105,7 @@ document.getElementById('fullscreen').addEventListener('click', async () => {
     try { await document.getElementById('game').requestFullscreen(); }
     catch { status.textContent = 'Fullscreen is unavailable in this browser.'; }
 });
-window.addEventListener('pagehide', () => { if (gameURL) URL.revokeObjectURL(gameURL); });
+
 </script>
 </body>
 </html>
