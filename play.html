@@ -404,6 +404,7 @@ romInput.addEventListener("change", function() {
 
     /* use the keys chosen in the controls menu */
     window.EJS_defaultControls = buildEmulatorControls();
+    window.EJS_startOnLoaded = true;
 
     const script = document.createElement("script");
     script.src = "./emulator/loader.js";
