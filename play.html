@@ -208,7 +208,12 @@ romInput.addEventListener("change", function() {
     window.EJS_gameName = file.name;
 
     // apply saved homepage keyboard settings
-    //window.EJS_defaultControls = buildControls();
+    window.EJS_defaultControls = {
+    ...buildControls(),
+    1: {},
+    2: {},
+    3: {}
+};
 
     const script = document.createElement("script");
     script.src = "./emulator/loader.js";
