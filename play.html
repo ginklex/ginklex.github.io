@@ -2,85 +2,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DS Emulator | Game Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS Emulator | Game Hub</title>
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        body {
-            min-height: 100vh;
-            background: #182421;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
+body {
+    min-height: 100vh;
+    background: #182421;
+    color: white;
+    font-family: Arial, sans-serif;
+}
 
-        header {
-            padding: 20px 30px;
-            background: #101a17;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+header {
+    padding: 20px 30px;
+    background: #101a17;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        a {
-            color: #8ee6b1;
-            text-decoration: none;
-        }
+a {
+    color: #8ee6b1;
+    text-decoration: none;
+}
 
-        main {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+main {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 20px;
+}
 
-        .player {
-            background: #101a17;
-            padding: 20px;
-            border-radius: 12px;
-        }
+.player {
+    background: #101a17;
+    padding: 20px;
+    border-radius: 12px;
+}
 
-        #game {
-            width: 100%;
-            min-height: 400px;
-            background: black;
-        }
+#game {
+    width: 100%;
+    min-height: 400px;
+    background: black;
+}
 
-        .controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+.controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
 
-        button, .file-button {
-            background: #36a66d;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 7px;
-            cursor: pointer;
-            font-size: 15px;
-        }
+button, .file-button {
+    background: #36a66d;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 15px;
+}
 
-        button:hover, .file-button:hover {
-            background: #278653;
-        }
+button:hover, .file-button:hover {
+    background: #278653;
+}
 
-        #status {
-            margin-top: 15px;
-            color: #a7b8ae;
-        }
+#status {
+    margin-top: 15px;
+    color: #a7b8ae;
+}
 
-        input {
-            display: none;
-        }
-    </style>
+input[type="file"] {
+    display: none;
+}
+
+/* settings popup */
+#settings {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000b;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    z-index: 1000;
+}
+
+.settings-box {
+    background: #182421;
+    border: 1px solid #456052;
+    border-radius: 12px;
+    padding: 25px;
+    width: 100%;
+    max-width: 450px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.settings-box h2 {
+    margin-bottom: 8px;
+}
+
+.settings-box p {
+    color: #a7b8ae;
+    margin-bottom: 18px;
+}
+
+.key-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #30453c;
+}
+
+.key-button {
+    min-width: 100px;
+    background: #30453c;
+}
+
+.key-button.listening {
+    background: #b47a28;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.close-button {
+    background: #555;
+}
+
+</style>
 </head>
 
 <body>
@@ -97,19 +158,11 @@
         <br>
 
         <div class="controls">
-            <label class="file-button" for="rom">
-                select nds game
-            </label>
+            <label class="file-button" for="rom">select nds game</label>
+            <input type="file" id="rom" accept=".nds,.zip">
 
-            <input
-                type="file"
-                id="rom"
-                accept=".nds,.zip"
-            >
-
-            <button onclick="fullscreen()">
-                fullscreen
-            </button>
+            <button onclick="openSettings()">⚙ controls</button>
+            <button onclick="fullscreen()">fullscreen</button>
         </div>
 
         <div id="game"></div>
@@ -119,56 +172,191 @@
     </div>
 </main>
 
+<!-- controls settings -->
+<div id="settings">
+    <div class="settings-box">
+        <h2>keyboard controls</h2>
+        <p>click a key and press the key you want to use.</p>
+
+        <div id="keyList"></div>
+
+        <div class="settings-actions">
+            <button onclick="resetKeys()">restore defaults</button>
+            <button class="close-button" onclick="closeSettings()">close</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const romInput = document.getElementById("rom");
-    const status = document.getElementById("status");
+const romInput = document.getElementById("rom");
+const statusText = document.getElementById("status");
 
-    let emulatorStarted = false;
+const defaults = {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    a: "x",
+    b: "z",
+    x: "s",
+    y: "a",
+    l: "q",
+    r: "w",
+    start: "Enter",
+    select: "ShiftRight"
+};
 
-    romInput.addEventListener("change", function() {
-        const file = this.files[0];
+const labels = {
+    up: "D-pad Up",
+    down: "D-pad Down",
+    left: "D-pad Left",
+    right: "D-pad Right",
+    a: "A",
+    b: "B",
+    x: "X",
+    y: "Y",
+    l: "L",
+    r: "R",
+    start: "Start",
+    select: "Select"
+};
 
-        if (!file) return;
+let keyMap = {
+    ...defaults,
+    ...JSON.parse(localStorage.getItem("dsControls") || "{}")
+};
 
-        if (emulatorStarted) {
-            location.reload();
-            return;
+let listeningFor = null;
+
+function displayKey(key) {
+    return {
+        ArrowUp: "↑",
+        ArrowDown: "↓",
+        ArrowLeft: "←",
+        ArrowRight: "→",
+        Enter: "Enter",
+        ShiftRight: "Right Shift",
+        Space: "Space"
+    }[key] || key.toUpperCase();
+}
+
+function renderKeys() {
+    const list = document.getElementById("keyList");
+    list.innerHTML = "";
+
+    Object.keys(defaults).forEach(button => {
+        const row = document.createElement("div");
+        row.className = "key-row";
+
+        const label = document.createElement("span");
+        label.textContent = labels[button];
+
+        const keyButton = document.createElement("button");
+        keyButton.className = "key-button";
+        keyButton.textContent =
+            listeningFor === button
+            ? "press a key..."
+            : displayKey(keyMap[button]);
+
+        if (listeningFor === button) {
+            keyButton.classList.add("listening");
         }
 
-        status.textContent = "loading game...";
-
-        window.EJS_player = "#game";
-        window.EJS_core = "nds";
-        window.EJS_pathtodata = "./emulator/";
-        window.EJS_gameUrl = URL.createObjectURL(file);
-        window.EJS_gameName = file.name;
-
-        emulatorStarted = true;
-
-        const script = document.createElement("script");
-        script.src = "./emulator/loader.js";
-
-        script.onload = function() {
-            status.textContent = "emulator loaded.";
+        keyButton.onclick = () => {
+            listeningFor = button;
+            renderKeys();
         };
 
-        script.onerror = function() {
-            status.textContent = "error loading emulator. check your emulator folder.";
-        };
-
-        document.body.appendChild(script);
+        row.append(label, keyButton);
+        list.appendChild(row);
     });
+}
 
-    function fullscreen() {
-        const game = document.getElementById("game");
+function openSettings() {
+    listeningFor = null;
+    renderKeys();
+    document.getElementById("settings").style.display = "flex";
+}
 
-        if (game.requestFullscreen) {
-            game.requestFullscreen();
-        }
+function closeSettings() {
+    listeningFor = null;
+    document.getElementById("settings").style.display = "none";
+    renderKeys();
+}
+
+function resetKeys() {
+    keyMap = {...defaults};
+    saveKeys();
+    listeningFor = null;
+    renderKeys();
+}
+
+function saveKeys() {
+    localStorage.setItem("dsControls", JSON.stringify(keyMap));
+}
+
+document.addEventListener("keydown", function(event) {
+    if (!listeningFor) return;
+
+    event.preventDefault();
+
+    if (event.key === "Escape") {
+        listeningFor = null;
+        renderKeys();
+        return;
     }
+
+    const newKey = event.code;
+
+    const alreadyUsed = Object.entries(keyMap).find(
+        ([button, key]) => key === newKey && button !== listeningFor
+    );
+
+    if (alreadyUsed) {
+        alert("That key is already assigned to " + labels[alreadyUsed[0]]);
+        return;
+    }
+
+    keyMap[listeningFor] = newKey;
+    saveKeys();
+
+    listeningFor = null;
+    renderKeys();
+});
+
+function fullscreen() {
+    const game = document.getElementById("game");
+    if (game.requestFullscreen) game.requestFullscreen();
+}
+
+romInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    statusText.textContent = "loading game...";
+
+    window.EJS_player = "#game";
+    window.EJS_core = "nds";
+    window.EJS_pathtodata = "./emulator/";
+    window.EJS_gameUrl = URL.createObjectURL(file);
+    window.EJS_gameName = file.name;
+
+    const script = document.createElement("script");
+    script.src = "./emulator/loader.js";
+
+    script.onload = () => {
+        statusText.textContent = "emulator loaded.";
+    };
+
+    script.onerror = () => {
+        statusText.textContent = "error loading emulator.";
+    };
+
+    document.body.appendChild(script);
+});
+
+renderKeys();
 </script>
 
 </body>
-</html>
-
 </html>
