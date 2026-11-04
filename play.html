@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,75 +77,8 @@ button:hover, .file-button:hover {
     color: #a7b8ae;
 }
 
-.note {
-    margin-top: 8px;
-    color: #7f9287;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
 input[type="file"] {
     display: none;
-}
-
-/* settings popup */
-#settings {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #000b;
-    justify-content: center;
-    align-items: center;
-    padding: 15px;
-    z-index: 1000;
-}
-
-.settings-box {
-    background: #182421;
-    border: 1px solid #456052;
-    border-radius: 12px;
-    padding: 25px;
-    width: 100%;
-    max-width: 450px;
-    max-height: 85vh;
-    overflow-y: auto;
-}
-
-.settings-box h2 {
-    margin-bottom: 8px;
-}
-
-.settings-box p {
-    color: #a7b8ae;
-    margin-bottom: 18px;
-}
-
-.key-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #30453c;
-}
-
-.key-button {
-    min-width: 100px;
-    background: #30453c;
-}
-
-.key-button.listening {
-    background: #b47a28;
-}
-
-.settings-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-}
-
-.close-button {
-    background: #555;
 }
 </style>
 </head>
@@ -158,7 +92,6 @@ input[type="file"] {
 
 <main>
     <div class="player">
-
         <h2>nintendo ds emulator</h2>
         <br>
 
@@ -166,248 +99,116 @@ input[type="file"] {
             <label class="file-button" for="rom">select nds game</label>
             <input type="file" id="rom" accept=".nds,.zip">
 
-            <button onclick="openSettings()">⚙ controls</button>
+            <button onclick="window.location.href='index.html#settings'">
+                ⚙ change controls
+            </button>
+
             <button onclick="fullscreen()">fullscreen</button>
         </div>
 
         <div id="game"></div>
 
         <p id="status">select an nds game to begin.</p>
-        <p class="note">
-            Saves are stored in this browser and written out every 30 seconds,
-            so after saving in-game, wait a bit before closing the tab.
-            Wi-Fi features (GTS, Wi-Fi Club, Union Room, trading) are not supported
-            and will show "a communication error has occurred."
-        </p>
-
     </div>
 </main>
-
-<!-- controls settings -->
-<div id="settings">
-    <div class="settings-box">
-        <h2>keyboard controls</h2>
-        <p>click a button, then press the key you want to use.
-           Changes apply the next time a game is loaded (refresh the page after changing).</p>
-
-        <div id="keyList"></div>
-
-        <div class="settings-actions">
-            <button onclick="resetKeys()">restore defaults</button>
-            <button class="close-button" onclick="closeSettings()">close</button>
-        </div>
-    </div>
-</div>
 
 <script>
 const romInput = document.getElementById("rom");
 const statusText = document.getElementById("status");
 
-let gameStarted = false;
-
-/* keys are stored as lowercase event.key values (what EmulatorJS expects) */
 const defaults = {
-    up: "arrowup",
-    down: "arrowdown",
-    left: "arrowleft",
-    right: "arrowright",
-    a: "x",
-    b: "z",
-    x: "s",
-    y: "a",
-    l: "q",
-    r: "w",
-    start: "enter",
-    select: "shift"
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    a: "KeyX",
+    b: "KeyZ",
+    x: "KeyS",
+    y: "KeyA",
+    l: "KeyQ",
+    r: "KeyW",
+    start: "Enter",
+    select: "ShiftRight"
 };
 
-const labels = {
-    up: "D-pad Up",
-    down: "D-pad Down",
-    left: "D-pad Left",
-    right: "D-pad Right",
-    a: "A",
-    b: "B",
-    x: "X",
-    y: "Y",
-    l: "L",
-    r: "R",
-    start: "Start",
-    select: "Select"
-};
-
-/* EmulatorJS button indices for the DS */
-const buttonIndex = {
-    b: 0,
-    y: 1,
-    select: 2,
-    start: 3,
-    up: 4,
-    down: 5,
-    left: 6,
-    right: 7,
-    a: 8,
-    x: 9,
-    l: 10,
-    r: 11
-};
-
-function loadKeys() {
+function getControls() {
     try {
-        return { ...defaults, ...JSON.parse(localStorage.getItem("dsControlsV2") || "{}") };
-    } catch (e) {
+        const saved = JSON.parse(localStorage.getItem("dsControls") || "{}");
+        return { ...defaults, ...saved };
+    } catch {
         return { ...defaults };
     }
 }
 
-let keyMap = loadKeys();
-let listeningFor = null;
-
-function displayKey(key) {
-    const names = {
-        arrowup: "↑",
-        arrowdown: "↓",
-        arrowleft: "←",
-        arrowright: "→",
-        enter: "Enter",
-        shift: "Shift",
-        space: "Space",
-        control: "Ctrl",
-        alt: "Alt",
-        tab: "Tab",
-        backspace: "Backspace"
+// translate browser key codes into EmulatorJS key names
+function emulatorKey(code) {
+    const special = {
+        ArrowUp: "UP",
+        ArrowDown: "DOWN",
+        ArrowLeft: "LEFT",
+        ArrowRight: "RIGHT",
+        Enter: "ENTER",
+        ShiftRight: "RIGHT SHIFT",
+        ShiftLeft: "LEFT SHIFT",
+        Space: "SPACE",
+        Escape: "ESCAPE",
+        Backspace: "BACKSPACE",
+        Tab: "TAB"
     };
-    return names[key] || key.toUpperCase();
+
+    if (special[code]) return special[code];
+
+    if (code.startsWith("Key")) return code.slice(3).toLowerCase();
+    if (code.startsWith("Digit")) return code.slice(5);
+
+    return code.toLowerCase();
 }
 
-function renderKeys() {
-    const list = document.getElementById("keyList");
-    list.innerHTML = "";
+// create EmulatorJS control mappings from homepage settings
+function buildControls() {
+    const keys = getControls();
 
-    Object.keys(defaults).forEach(button => {
-        const row = document.createElement("div");
-        row.className = "key-row";
-
-        const label = document.createElement("span");
-        label.textContent = labels[button];
-
-        const keyButton = document.createElement("button");
-        keyButton.className = "key-button";
-        keyButton.textContent =
-            listeningFor === button
-            ? "press a key..."
-            : displayKey(keyMap[button]);
-
-        if (listeningFor === button) {
-            keyButton.classList.add("listening");
+    return {
+        0: {
+            0: { value: emulatorKey(keys.b), value2: "BUTTON_2" },
+            1: { value: emulatorKey(keys.y), value2: "BUTTON_3" },
+            2: { value: emulatorKey(keys.select), value2: "SELECT" },
+            3: { value: emulatorKey(keys.start), value2: "START" },
+            4: { value: emulatorKey(keys.up), value2: "DPAD_UP" },
+            5: { value: emulatorKey(keys.down), value2: "DPAD_DOWN" },
+            6: { value: emulatorKey(keys.left), value2: "DPAD_LEFT" },
+            7: { value: emulatorKey(keys.right), value2: "DPAD_RIGHT" },
+            8: { value: emulatorKey(keys.a), value2: "BUTTON_1" },
+            9: { value: emulatorKey(keys.x), value2: "BUTTON_4" },
+            10: { value: emulatorKey(keys.l), value2: "LEFT_TOP" },
+            11: { value: emulatorKey(keys.r), value2: "RIGHT_TOP" }
         }
-
-        keyButton.onclick = () => {
-            listeningFor = button;
-            renderKeys();
-        };
-
-        row.append(label, keyButton);
-        list.appendChild(row);
-    });
+    };
 }
-
-function openSettings() {
-    listeningFor = null;
-    renderKeys();
-    document.getElementById("settings").style.display = "flex";
-}
-
-function closeSettings() {
-    listeningFor = null;
-    document.getElementById("settings").style.display = "none";
-    renderKeys();
-}
-
-function resetKeys() {
-    keyMap = { ...defaults };
-    saveKeys();
-    listeningFor = null;
-    renderKeys();
-}
-
-function saveKeys() {
-    try {
-        localStorage.setItem("dsControlsV2", JSON.stringify(keyMap));
-    } catch (e) {}
-}
-
-document.addEventListener("keydown", function(event) {
-    if (!listeningFor) return;
-
-    event.preventDefault();
-
-    if (event.key === "Escape") {
-        listeningFor = null;
-        renderKeys();
-        return;
-    }
-
-    let newKey = event.key === " " ? "space" : event.key.toLowerCase();
-
-    const alreadyUsed = Object.entries(keyMap).find(
-        ([button, key]) => key === newKey && button !== listeningFor
-    );
-
-    if (alreadyUsed) {
-        alert("That key is already assigned to " + labels[alreadyUsed[0]]);
-        return;
-    }
-
-    keyMap[listeningFor] = newKey;
-    saveKeys();
-
-    listeningFor = null;
-    renderKeys();
-});
 
 function fullscreen() {
     const game = document.getElementById("game");
-    if (game.requestFullscreen) game.requestFullscreen();
-}
 
-function buildEmulatorControls() {
-    const player0 = {};
-    Object.keys(buttonIndex).forEach(button => {
-        player0[buttonIndex[button]] = { value: keyMap[button] };
-    });
-    /* the emulator expects an entry for all four players */
-    return { 0: player0, 1: {}, 2: {}, 3: {} };
+    if (game.requestFullscreen) {
+        game.requestFullscreen();
+    }
 }
 
 romInput.addEventListener("change", function() {
     const file = this.files[0];
     if (!file) return;
 
-    if (gameStarted) {
-        statusText.textContent = "a game is already running. refresh the page to load a different one.";
-        return;
-    }
-    gameStarted = true;
-
     statusText.textContent = "loading game...";
 
+    // load homepage settings before EmulatorJS starts
     window.EJS_player = "#game";
     window.EJS_core = "nds";
     window.EJS_pathtodata = "./emulator/";
     window.EJS_gameUrl = URL.createObjectURL(file);
+    window.EJS_gameName = file.name;
 
-    /* fixed name (no extension) so saves always match the same game */
-    window.EJS_gameName = file.name.replace(/\.[^.]+$/, "");
-
-    /* write the in-game save to browser storage every 30 seconds */
-    window.EJS_defaultOptions = { "save-save-interval": "30" };
-
-    /* use the keys chosen in the controls menu */
-    window.EJS_defaultControls = buildEmulatorControls();
-
-    /* start automatically once loaded */
-    window.EJS_startOnLoaded = true;
+    // apply saved homepage keyboard settings
+    window.EJS_defaultControls = buildControls();
 
     const script = document.createElement("script");
     script.src = "./emulator/loader.js";
@@ -417,14 +218,11 @@ romInput.addEventListener("change", function() {
     };
 
     script.onerror = () => {
-        gameStarted = false;
         statusText.textContent = "error loading emulator.";
     };
 
     document.body.appendChild(script);
 });
-
-renderKeys();
 </script>
 
 </body>
