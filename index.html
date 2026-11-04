@@ -204,6 +204,43 @@ section {
     display: none;
 }
 
+#dsKeySettings {
+    max-width: 400px;
+    margin: 20px 0;
+}
+
+.ds-key-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #526b5e;
+}
+
+.ds-key-row button {
+    background: #526b5e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    cursor: pointer;
+    min-width: 110px;
+}
+
+.ds-key-row button:hover {
+    background: #71917d;
+}
+
+#dsMessage {
+    margin-top: 15px;
+}
+
+.settings-divider {
+    margin: 30px 0;
+    border: 0;
+    border-top: 1px solid #526b5e;
+}
+
 footer {
     text-align: center;
     padding: 30px;
@@ -269,7 +306,6 @@ footer {
 
     <div class="games">
 
-        <!-- mario kart ds -->
         <a href="play.html" class="game"
            style="text-decoration: none; color: inherit; display: block;">
             <div class="game-image">🏎️</div>
@@ -302,8 +338,9 @@ footer {
 </section>
 
 <section class="settings" id="settings">
+
     <h2>Website Customization</h2>
-    <p>choose your own background image for Game Hub.</p>
+    <p>Choose your own background image for Game Hub.</p>
 
     <label for="fileInput" class="button">
         Upload Background
@@ -318,6 +355,20 @@ footer {
     <p id="message" style="margin-top: 15px; margin-bottom: 0;">
         no custom background selected.
     </p>
+
+    <hr class="settings-divider">
+
+    <h2>DS Emulator Controls</h2>
+    <p>Customize your Nintendo DS keyboard controls.</p>
+
+    <div id="dsKeySettings"></div>
+
+    <button class="button" id="resetDSKeys">
+        Reset Controls
+    </button>
+
+    <p id="dsMessage"></p>
+
 </section>
 
 <footer>
@@ -325,6 +376,8 @@ footer {
 </footer>
 
 <script>
+// BACKGROUND SETTINGS
+
 const input = document.getElementById("fileInput");
 const background = document.getElementById("background");
 const message = document.getElementById("message");
@@ -332,7 +385,6 @@ const resetButton = document.getElementById("resetButton");
 
 let currentURL = null;
 
-// save images in browser storage
 const databaseRequest = indexedDB.open("GameHubSettings", 1);
 
 databaseRequest.onupgradeneeded = function(event) {
@@ -352,6 +404,10 @@ databaseRequest.onsuccess = function(event) {
             message.textContent = "saved background loaded!";
         }
     };
+};
+
+databaseRequest.onerror = function() {
+    message.textContent = "could not open background storage.";
 };
 
 function showBackground(file) {
@@ -375,8 +431,9 @@ input.addEventListener("change", function() {
     }
 
     const db = databaseRequest.result;
-    const transaction = db.transaction("settings", "readwrite");
+    if (!db) return;
 
+    const transaction = db.transaction("settings", "readwrite");
     transaction.objectStore("settings").put(file, "background");
 
     transaction.oncomplete = function() {
@@ -391,8 +448,9 @@ input.addEventListener("change", function() {
 
 resetButton.addEventListener("click", function() {
     const db = databaseRequest.result;
-    const transaction = db.transaction("settings", "readwrite");
+    if (!db) return;
 
+    const transaction = db.transaction("settings", "readwrite");
     transaction.objectStore("settings").delete("background");
 
     transaction.oncomplete = function() {
@@ -407,6 +465,130 @@ resetButton.addEventListener("click", function() {
         input.value = "";
     };
 });
+
+
+// DS KEYBOARD SETTINGS
+
+const defaultDSKeys = {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    a: "KeyX",
+    b: "KeyZ",
+    x: "KeyS",
+    y: "KeyA",
+    l: "KeyQ",
+    r: "KeyW",
+    start: "Enter",
+    select: "ShiftRight"
+};
+
+const dsLabels = {
+    up: "D-pad Up",
+    down: "D-pad Down",
+    left: "D-pad Left",
+    right: "D-pad Right",
+    a: "A",
+    b: "B",
+    x: "X",
+    y: "Y",
+    l: "L",
+    r: "R",
+    start: "Start",
+    select: "Select"
+};
+
+let dsKeys;
+
+try {
+    dsKeys = {
+        ...defaultDSKeys,
+        ...JSON.parse(localStorage.getItem("dsControls") || "{}")
+    };
+} catch {
+    dsKeys = {...defaultDSKeys};
+}
+
+let waitingForDSKey = null;
+
+function renderDSKeys() {
+    const container = document.getElementById("dsKeySettings");
+    container.innerHTML = "";
+
+    Object.keys(defaultDSKeys).forEach(key => {
+        const row = document.createElement("div");
+        row.className = "ds-key-row";
+
+        const label = document.createElement("span");
+        label.textContent = dsLabels[key];
+
+        const button = document.createElement("button");
+
+        button.textContent = waitingForDSKey === key
+            ? "Press a key..."
+            : dsKeys[key].replace("Arrow", "");
+
+        button.onclick = () => {
+            waitingForDSKey = key;
+            document.getElementById("dsMessage").textContent =
+                "press a key for " + dsLabels[key];
+            renderDSKeys();
+        };
+
+        row.append(label, button);
+        container.appendChild(row);
+    });
+}
+
+document.addEventListener("keydown", function(event) {
+    if (!waitingForDSKey) return;
+
+    event.preventDefault();
+
+    if (event.code === "Escape") {
+        waitingForDSKey = null;
+        renderDSKeys();
+        return;
+    }
+
+    const duplicate = Object.entries(dsKeys).find(
+        ([key, code]) => code === event.code && key !== waitingForDSKey
+    );
+
+    if (duplicate) {
+        document.getElementById("dsMessage").textContent =
+            "that key is already assigned!";
+        return;
+    }
+
+    dsKeys[waitingForDSKey] = event.code;
+
+    localStorage.setItem("dsControls", JSON.stringify(dsKeys));
+
+    waitingForDSKey = null;
+
+    document.getElementById("dsMessage").textContent =
+        "controls saved!";
+
+    renderDSKeys();
+});
+
+document.getElementById("resetDSKeys").addEventListener("click", function() {
+    dsKeys = {...defaultDSKeys};
+
+    localStorage.setItem("dsControls", JSON.stringify(dsKeys));
+
+    waitingForDSKey = null;
+
+    document.getElementById("dsMessage").textContent =
+        "controls restored to defaults.";
+
+    renderDSKeys();
+});
+
+renderDSKeys();
+
 </script>
 
 </body>
