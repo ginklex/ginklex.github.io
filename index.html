@@ -313,6 +313,19 @@ footer {
     nav { display: flex; flex-wrap: wrap; gap: 14px; }
     nav a { margin-left: 0; }
 }
+
+#download-list[hidden], #downloads-unlock-form[hidden] { display: none !important; }
+
+/* Shared default background for every visitor. */
+body {
+    background-color: #182421;
+    background-image: linear-gradient(rgba(10, 20, 16, .35), rgba(10, 20, 16, .35)), url("./background.png");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
 </style>
 </head>
 
@@ -382,8 +395,14 @@ footer {
 <section id="downloads" aria-labelledby="downloads-title">
     <h2 class="section-title" id="downloads-title">Downloads</h2>
     <p class="download-intro">Browse shared files and download a copy to your device.</p>
-    <p id="download-status" role="status">Loading files…</p>
-    <div id="download-list" class="games"></div>
+    <form id="downloads-unlock-form" style="margin-bottom: 20px;">
+        <label for="downloads-code" style="display:block; margin-bottom:10px;">Enter the downloads access code</label>
+        <input id="downloads-code" type="password" inputmode="numeric" autocomplete="off" required
+               style="padding:13px; border-radius:8px; border:1px solid #526b5e; max-width:100%; margin:0 8px 12px 0; font-size:16px;">
+        <button class="button" type="submit">Unlock Downloads</button>
+    </form>
+    <p id="download-status" role="status" aria-live="polite">Downloads are locked.</p>
+    <div id="download-list" class="games" hidden></div>
 </section>
 
 <section class="settings" id="settings">
@@ -402,7 +421,7 @@ footer {
     </button>
 
     <p id="message" style="margin-top: 15px; margin-bottom: 0;">
-        no custom background selected.
+        using the default site background.
     </p>
 
     <hr class="settings-divider">
@@ -510,7 +529,7 @@ resetButton.addEventListener("click", function() {
             currentURL = null;
         }
 
-        message.textContent = "background reset!";
+        message.textContent = "default site background restored!";
         input.value = "";
     };
 });
@@ -642,45 +661,67 @@ renderDSKeys();
 
 
 <script>
-(async () => {
+(() => {
+    const files = [
+    {
+        "name": "Mario Kart DS",
+        "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Mario.Kart.DS.USA.En.Fr.De.Es.It.nds",
+        "size": 32
+    },
+    {
+        "name": "Pokémon HeartGold",
+        "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Pokemon.-.HeartGold.Version.USA.nds",
+        "size": 128
+    },
+    {
+        "name": "Pokémon Platinum",
+        "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Pokemon.-.Platinum.Version.USA.Rev.1.nds",
+        "size": 128
+    },
+    {
+        "name": "Pokémon SoulSilver",
+        "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Pokemon.-.SoulSilver.Version.USA.nds",
+        "size": 128
+    },
+    {
+        "name": "Sonic Classic Collection",
+        "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Sonic.Classic.Collection.USA.En.Fr.Es.NDSi.Enhanced.nds",
+        "size": 64
+    }
+];
     const status = document.getElementById("download-status");
     const list = document.getElementById("download-list");
-    try {
-        const response = await fetch("./downloads/files.json", { cache: "no-store" });
-        if (!response.ok) throw new Error("File list unavailable");
-        const files = await response.json();
-        if (!Array.isArray(files)) throw new Error("Invalid file list");
-        const fragment = document.createDocumentFragment();
-        for (const file of files) {
-            if (!file || typeof file.file !== "string" || !file.file.trim()) continue;
-            const segments = file.file.split("/");
-            if (segments.some(segment => !segment || segment === "." || segment === ".." || segment.includes("\\"))) continue;
-            const card = document.createElement("article");
-            card.className = "game download-card";
-            const heading = document.createElement("h3");
-            heading.textContent = file.name || segments[segments.length - 1];
-            card.appendChild(heading);
-            if (file.description) {
-                const description = document.createElement("p");
-                description.className = "download-description";
-                description.textContent = file.description;
-                card.appendChild(description);
-            }
-            const link = document.createElement("a");
-            link.className = "button";
-            link.href = "./downloads/" + segments.map(encodeURIComponent).join("/");
-            link.download = segments[segments.length - 1];
-            link.textContent = "Download ↓";
-            link.setAttribute("aria-label", "Download " + heading.textContent);
-            card.appendChild(link);
-            fragment.appendChild(card);
+    const form = document.getElementById("downloads-unlock-form");
+    const codeInput = document.getElementById("downloads-code");
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        if (codeInput.value.trim() !== "667788") {
+            status.textContent = "Incorrect access code. Try again.";
+            codeInput.select();
+            return;
         }
-        const count = fragment.childElementCount;
-        list.appendChild(fragment);
-        status.textContent = count ? count + (count === 1 ? " file available" : " files available") : "No files available yet. Check back soon.";
-    } catch (error) {
-        status.textContent = "Could not load the downloads. Please refresh and try again.";
+        list.replaceChildren();
+        form.hidden = true;
+        list.hidden = false;
+        codeInput.value = "";
+    for (const file of files) {
+        const card = document.createElement("article");
+        card.className = "game download-card";
+        const heading = document.createElement("h3");
+        heading.textContent = file.name;
+        const description = document.createElement("p");
+        description.className = "download-description";
+        description.textContent = "Nintendo DS · " + file.size + " MiB";
+        const link = document.createElement("a");
+        link.className = "button";
+        link.href = file.url;
+        link.textContent = "Download ↓";
+        link.setAttribute("aria-label", "Download " + file.name);
+        card.append(heading, description, link);
+        list.appendChild(card);
     }
+    status.textContent = files.length + " files available";
+    });
 })();
 </script>
 
