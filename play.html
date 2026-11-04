@@ -2,6 +2,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Simple access-code gate: this is not secure authentication. -->
+<script>
+(() => {
+    const storageKey = "gameHubUnlocked";
+    let unlocked = false;
+    try {
+        unlocked = sessionStorage.getItem(storageKey) === "yes";
+    } catch {}
+    if (unlocked) return;
+    document.documentElement.style.visibility = "hidden";
+    while (true) {
+        const code = prompt("Enter the Game Hub access code:");
+        if (code === null) {
+            location.replace("about:blank");
+            return;
+        }
+        if (code.trim() === "5972") {
+            try {
+                sessionStorage.setItem(storageKey, "yes");
+            } catch {}
+            document.documentElement.style.visibility = "";
+            return;
+        }
+        alert("Incorrect code. Try again.");
+    }
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DS Emulator | Game Hub</title>
