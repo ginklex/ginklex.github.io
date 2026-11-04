@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,6 +76,13 @@ button:hover, .file-button:hover {
     color: #a7b8ae;
 }
 
+.note {
+    margin-top: 8px;
+    color: #7f9287;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 input[type="file"] {
     display: none;
 }
@@ -140,7 +146,6 @@ input[type="file"] {
 .close-button {
     background: #555;
 }
-
 </style>
 </head>
 
@@ -168,6 +173,12 @@ input[type="file"] {
         <div id="game"></div>
 
         <p id="status">select an nds game to begin.</p>
+        <p class="note">
+            Saves are stored in this browser and written out every 30 seconds,
+            so after saving in-game, wait a bit before closing the tab.
+            Wi-Fi features (GTS, Wi-Fi Club, Union Room, trading) are not supported
+            and will show "a communication error has occurred."
+        </p>
 
     </div>
 </main>
@@ -176,7 +187,8 @@ input[type="file"] {
 <div id="settings">
     <div class="settings-box">
         <h2>keyboard controls</h2>
-        <p>click a key and press the key you want to use.</p>
+        <p>click a button, then press the key you want to use.
+           Changes apply the next time a game is loaded (refresh the page after changing).</p>
 
         <div id="keyList"></div>
 
@@ -191,19 +203,22 @@ input[type="file"] {
 const romInput = document.getElementById("rom");
 const statusText = document.getElementById("status");
 
+let gameStarted = false;
+
+/* keys are stored as lowercase event.key values (what EmulatorJS expects) */
 const defaults = {
-    up: "ArrowUp",
-    down: "ArrowDown",
-    left: "ArrowLeft",
-    right: "ArrowRight",
+    up: "arrowup",
+    down: "arrowdown",
+    left: "arrowleft",
+    right: "arrowright",
     a: "x",
     b: "z",
     x: "s",
     y: "a",
     l: "q",
     r: "w",
-    start: "Enter",
-    select: "ShiftRight"
+    start: "enter",
+    select: "shift"
 };
 
 const labels = {
@@ -221,23 +236,48 @@ const labels = {
     select: "Select"
 };
 
-let keyMap = {
-    ...defaults,
-    ...JSON.parse(localStorage.getItem("dsControls") || "{}")
+/* EmulatorJS button indices for the DS */
+const buttonIndex = {
+    b: 0,
+    y: 1,
+    select: 2,
+    start: 3,
+    up: 4,
+    down: 5,
+    left: 6,
+    right: 7,
+    a: 8,
+    x: 9,
+    l: 10,
+    r: 11
 };
 
+function loadKeys() {
+    try {
+        return { ...defaults, ...JSON.parse(localStorage.getItem("dsControlsV2") || "{}") };
+    } catch (e) {
+        return { ...defaults };
+    }
+}
+
+let keyMap = loadKeys();
 let listeningFor = null;
 
 function displayKey(key) {
-    return {
-        ArrowUp: "↑",
-        ArrowDown: "↓",
-        ArrowLeft: "←",
-        ArrowRight: "→",
-        Enter: "Enter",
-        ShiftRight: "Right Shift",
-        Space: "Space"
-    }[key] || key.toUpperCase();
+    const names = {
+        arrowup: "↑",
+        arrowdown: "↓",
+        arrowleft: "←",
+        arrowright: "→",
+        enter: "Enter",
+        shift: "Shift",
+        space: "Space",
+        control: "Ctrl",
+        alt: "Alt",
+        tab: "Tab",
+        backspace: "Backspace"
+    };
+    return names[key] || key.toUpperCase();
 }
 
 function renderKeys() {
@@ -285,14 +325,16 @@ function closeSettings() {
 }
 
 function resetKeys() {
-    keyMap = {...defaults};
+    keyMap = { ...defaults };
     saveKeys();
     listeningFor = null;
     renderKeys();
 }
 
 function saveKeys() {
-    localStorage.setItem("dsControls", JSON.stringify(keyMap));
+    try {
+        localStorage.setItem("dsControlsV2", JSON.stringify(keyMap));
+    } catch (e) {}
 }
 
 document.addEventListener("keydown", function(event) {
@@ -306,7 +348,7 @@ document.addEventListener("keydown", function(event) {
         return;
     }
 
-    const newKey = event.code;
+    let newKey = event.key === " " ? "space" : event.key.toLowerCase();
 
     const alreadyUsed = Object.entries(keyMap).find(
         ([button, key]) => key === newKey && button !== listeningFor
@@ -329,9 +371,23 @@ function fullscreen() {
     if (game.requestFullscreen) game.requestFullscreen();
 }
 
+function buildEmulatorControls() {
+    const player0 = {};
+    Object.keys(buttonIndex).forEach(button => {
+        player0[buttonIndex[button]] = { value: keyMap[button] };
+    });
+    return { 0: player0 };
+}
+
 romInput.addEventListener("change", function() {
     const file = this.files[0];
     if (!file) return;
+
+    if (gameStarted) {
+        statusText.textContent = "a game is already running. refresh the page to load a different one.";
+        return;
+    }
+    gameStarted = true;
 
     statusText.textContent = "loading game...";
 
@@ -339,7 +395,15 @@ romInput.addEventListener("change", function() {
     window.EJS_core = "nds";
     window.EJS_pathtodata = "./emulator/";
     window.EJS_gameUrl = URL.createObjectURL(file);
-    window.EJS_gameName = file.name;
+
+    /* fixed name (no extension) so saves always match the same game */
+    window.EJS_gameName = file.name.replace(/\.[^.]+$/, "");
+
+    /* write the in-game save to browser storage every 30 seconds */
+    window.EJS_defaultOptions = { "save-save-interval": "30" };
+
+    /* use the keys chosen in the controls menu */
+    window.EJS_defaultControls = buildEmulatorControls();
 
     const script = document.createElement("script");
     script.src = "./emulator/loader.js";
@@ -349,6 +413,7 @@ romInput.addEventListener("change", function() {
     };
 
     script.onerror = () => {
+        gameStarted = false;
         statusText.textContent = "error loading emulator.";
     };
 
