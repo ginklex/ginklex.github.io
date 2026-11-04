@@ -1,7 +1,22 @@
-[[
+[
   {
-    "name": "My Download",
-    "file": "your-exact-filename.zip",
-    "description": "Download this file."
+    "name": "Mario Kart DS",
+    "file": "Mario Kart DS (USA) (En,Fr,De,Es,It).nds"
+  },
+  {
+    "name": "Pokémon HeartGold",
+    "file": "Pokemon - HeartGold Version (USA).nds"
+  },
+  {
+    "name": "Pokémon Platinum",
+    "file": "Pokemon - Platinum Version (USA) (Rev 1).nds"
+  },
+  {
+    "name": "Pokémon SoulSilver",
+    "file": "Pokemon - SoulSilver Version (USA).nds"
+  },
+  {
+    "name": "Sonic Classic Collection",
+    "file": "Sonic Classic Collection (USA) (En,Fr,Es) (NDSi Enhanced).nds"
   }
-]]
+]
