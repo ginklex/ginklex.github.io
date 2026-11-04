@@ -300,6 +300,19 @@ footer {
         width: 90%;
     }
 }
+
+.download-intro, .download-description { color: #c0cec1; line-height: 1.6; }
+.download-intro { margin-bottom: 22px; }
+.download-card { padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.download-card h3 { overflow-wrap: anywhere; }
+.download-card .button { align-self: flex-start; margin-top: auto; }
+.download-description { font-size: 14px; }
+#download-status { color: #c0cec1; }
+@media(max-width: 600px) {
+    header { height: auto; min-height: 75px; flex-wrap: wrap; gap: 14px; padding-top: 16px; padding-bottom: 16px; }
+    nav { display: flex; flex-wrap: wrap; gap: 14px; }
+    nav a { margin-left: 0; }
+}
 </style>
 </head>
 
@@ -313,6 +326,7 @@ footer {
     <nav>
         <a href="#">Home</a>
         <a href="#games">Games</a>
+        <a href="#downloads">Downloads</a>
         <a href="#settings">Settings</a>
     </nav>
 </header>
@@ -363,6 +377,13 @@ footer {
         </div>
 
     </div>
+</section>
+
+<section id="downloads" aria-labelledby="downloads-title">
+    <h2 class="section-title" id="downloads-title">Downloads</h2>
+    <p class="download-intro">Browse shared files and download a copy to your device.</p>
+    <p id="download-status" role="status">Loading files…</p>
+    <div id="download-list" class="games"></div>
 </section>
 
 <section class="settings" id="settings">
@@ -617,6 +638,50 @@ document.getElementById("resetDSKeys").addEventListener("click", function() {
 
 renderDSKeys();
 
+</script>
+
+
+<script>
+(async () => {
+    const status = document.getElementById("download-status");
+    const list = document.getElementById("download-list");
+    try {
+        const response = await fetch("./downloads/files.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("File list unavailable");
+        const files = await response.json();
+        if (!Array.isArray(files)) throw new Error("Invalid file list");
+        const fragment = document.createDocumentFragment();
+        for (const file of files) {
+            if (!file || typeof file.file !== "string" || !file.file.trim()) continue;
+            const segments = file.file.split("/");
+            if (segments.some(segment => !segment || segment === "." || segment === ".." || segment.includes("\\"))) continue;
+            const card = document.createElement("article");
+            card.className = "game download-card";
+            const heading = document.createElement("h3");
+            heading.textContent = file.name || segments[segments.length - 1];
+            card.appendChild(heading);
+            if (file.description) {
+                const description = document.createElement("p");
+                description.className = "download-description";
+                description.textContent = file.description;
+                card.appendChild(description);
+            }
+            const link = document.createElement("a");
+            link.className = "button";
+            link.href = "./downloads/" + segments.map(encodeURIComponent).join("/");
+            link.download = segments[segments.length - 1];
+            link.textContent = "Download ↓";
+            link.setAttribute("aria-label", "Download " + heading.textContent);
+            card.appendChild(link);
+            fragment.appendChild(card);
+        }
+        const count = fragment.childElementCount;
+        list.appendChild(fragment);
+        status.textContent = count ? count + (count === 1 ? " file available" : " files available") : "No files available yet. Check back soon.";
+    } catch (error) {
+        status.textContent = "Could not load the downloads. Please refresh and try again.";
+    }
+})();
 </script>
 
 </body>
