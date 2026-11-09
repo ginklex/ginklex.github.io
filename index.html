@@ -4,7 +4,7 @@
 <!-- Simple access-code gate: this is not secure authentication. -->
 <script>
 (() => {
-    const storageKey = "gameHubUnlocked";
+    const storageKey = "gameHubUnlocked1715";
     let unlocked = false;
     try {
         unlocked = sessionStorage.getItem(storageKey) === "yes";
@@ -17,7 +17,7 @@
             location.replace("about:blank");
             return;
         }
-        if (code.trim() === "667788") {
+        if (code.trim() === "1715") {
             try {
                 sessionStorage.setItem(storageKey, "yes");
             } catch {}
@@ -359,11 +359,11 @@ body {
     <h2 class="section-title">Game Library</h2>
 
     <div class="games">
-        <a href="3ds/" class="game" style="text-decoration:none; color:inherit; display:block;">
+        <a href="gamecube/" class="game" style="text-decoration:none; color:inherit; display:block;">
             <div class="game-image">🎮</div>
             <div class="game-info">
-                <h3>Nintendo 3DS Emulator</h3>
-                <p>Nintendo 3DS games in browser · experimental</p>
+                <h3>Nintendo GameCube Emulator</h3>
+                <p>GameCube games in browser · experimental</p>
                 <span class="status">PLAY GAME →</span>
             </div>
         </a>
@@ -703,7 +703,7 @@ renderDSKeys();
     const codeInput = document.getElementById("downloads-code");
     form.addEventListener("submit", event => {
         event.preventDefault();
-        if (codeInput.value.trim() !== "667788") {
+        if (codeInput.value.trim() !== "1715") {
             status.textContent = "Incorrect access code. Try again.";
             codeInput.select();
             return;

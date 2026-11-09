@@ -5,7 +5,7 @@
 <!-- Simple access-code gate: this is not secure authentication. -->
 <script>
 (() => {
-    const storageKey = "gameHubUnlocked";
+    const storageKey = "gameHubUnlocked1715";
     let unlocked = false;
     try {
         unlocked = sessionStorage.getItem(storageKey) === "yes";
@@ -18,7 +18,7 @@
             location.replace("about:blank");
             return;
         }
-        if (code.trim() === "667788") {
+        if (code.trim() === "1715") {
             try {
                 sessionStorage.setItem(storageKey, "yes");
             } catch {}
