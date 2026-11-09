@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Game Hub revision: gamecube-1715 -->
+<!-- Simple access-code gate: this is not secure authentication. -->
+<script>
+(() => {
+    const storageKey = "gameHubUnlocked1715";
+    let unlocked = false;
+    try {
+        unlocked = sessionStorage.getItem(storageKey) === "yes";
+    } catch {}
+    if (unlocked) return;
+    document.documentElement.style.visibility = "hidden";
+    while (true) {
+        const code = prompt("Enter the Game Hub access code:");
+        if (code === null) {
+            location.replace("about:blank");
+            return;
+        }
+        if (code.trim() === "1715") {
+            try {
+                sessionStorage.setItem(storageKey, "yes");
+            } catch {}
+            document.documentElement.style.visibility = "";
+            return;
+        }
+        alert("Incorrect code. Try again.");
+    }
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS Emulator | Game Hub</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: #182421;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    padding: 20px 30px;
+    background: #101a17;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+a {
+    color: #8ee6b1;
+    text-decoration: none;
+}
+
+main {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.player {
+    background: #101a17;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+#game {
+    width: 100%;
+    min-height: 400px;
+    background: black;
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+button, .file-button {
+    background: #36a66d;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover, .file-button:hover {
+    background: #278653;
+}
+
+#status {
+    margin-top: 15px;
+    color: #a7b8ae;
+}
+
+input[type="file"] {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h2>game hub</h2>
+    <a href="index.html">← back</a>
+</header>
+
+<main>
+    <div class="player">
+        <h2>nintendo ds emulator</h2>
+        <br>
+
+        <div class="controls">
+            <label class="file-button" for="rom">select nds game</label>
+            <input type="file" id="rom" accept=".nds,.zip">
+
+            <button onclick="window.location.href='index.html#settings'">
+                ⚙ change controls
+            </button>
+
+            <button onclick="fullscreen()">fullscreen</button>
+        </div>
+
+        <div id="game"></div>
+
+        <p id="status">select an nds game to begin.</p>
+    </div>
+</main>
+
+<script>
+const romInput = document.getElementById("rom");
+const statusText = document.getElementById("status");
+
+const defaults = {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    a: "KeyX",
+    b: "KeyZ",
+    x: "KeyS",
+    y: "KeyA",
+    l: "KeyQ",
+    r: "KeyW",
+    start: "Enter",
+    select: "ShiftRight"
+};
+
+function getControls() {
+    try {
+        const saved = JSON.parse(localStorage.getItem("dsControls") || "{}");
+        return { ...defaults, ...saved };
+    } catch {
+        return { ...defaults };
+    }
+}
+
+// translate browser key codes into EmulatorJS key names
+function emulatorKey(code) {
+    const special = {
+ ArrowUp: "up arrow",
+ ArrowDown: "down arrow",
+ ArrowLeft: "left arrow",
+ ArrowRight: "right arrow",
+        Enter: "ENTER",
+        ShiftRight: "RIGHT SHIFT",
+        ShiftLeft: "LEFT SHIFT",
+        Space: "SPACE",
+        Escape: "ESCAPE",
+        Backspace: "BACKSPACE",
+        Tab: "TAB"
+    };
+
+    if (special[code]) return special[code];
+
+    if (code.startsWith("Key")) return code.slice(3).toLowerCase();
+    if (code.startsWith("Digit")) return code.slice(5);
+
+    return code.toLowerCase();
+}
+
+// create EmulatorJS control mappings from homepage settings
+function buildControls() {
+    const keys = getControls();
+
+    return {
+        0: {
+            0: { value: emulatorKey(keys.b), value2: "BUTTON_2" },
+            1: { value: emulatorKey(keys.y), value2: "BUTTON_3" },
+            2: { value: emulatorKey(keys.select), value2: "SELECT" },
+            3: { value: emulatorKey(keys.start), value2: "START" },
+            4: { value: emulatorKey(keys.up), value2: "DPAD_UP" },
+            5: { value: emulatorKey(keys.down), value2: "DPAD_DOWN" },
+            6: { value: emulatorKey(keys.left), value2: "DPAD_LEFT" },
+            7: { value: emulatorKey(keys.right), value2: "DPAD_RIGHT" },
+            8: { value: emulatorKey(keys.a), value2: "BUTTON_1" },
+            9: { value: emulatorKey(keys.x), value2: "BUTTON_4" },
+            10: { value: emulatorKey(keys.l), value2: "LEFT_TOP" },
+            11: { value: emulatorKey(keys.r), value2: "RIGHT_TOP" }
+        }
+    };
+}
+
+function fullscreen() {
+    const game = document.getElementById("game");
+
+    if (game.requestFullscreen) {
+        game.requestFullscreen();
+    }
+}
+
+romInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    statusText.textContent = "loading game...";
+
+    // load homepage settings before EmulatorJS starts
+    window.EJS_player = "#game";
+    window.EJS_core = "nds";
+    window.EJS_pathtodata = "./emulator/";
+    window.EJS_gameUrl = URL.createObjectURL(file);
+    window.EJS_gameName = file.name;
+
+    // apply saved homepage keyboard settings
+    window.EJS_defaultControls = {
+    ...buildControls(),
+    1: {},
+    2: {},
+    3: {}
+};
+
+    const script = document.createElement("script");
+    script.src = "./emulator/loader.js";
+
+    script.onload = () => {
+        statusText.textContent = "emulator loaded.";
+    };
+
+    script.onerror = () => {
+        statusText.textContent = "error loading emulator.";
+    };
+
+    document.body.appendChild(script);
+});
+</script>
+
+</body>
+</html>
