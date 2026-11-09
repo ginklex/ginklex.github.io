@@ -674,27 +674,38 @@ renderDSKeys();
     {
         "name": "Mario Kart DS",
         "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Mario.Kart.DS.USA.En.Fr.De.Es.It.nds",
-        "size": 32
+        "size": 32,
+        "platform": "Nintendo DS"
     },
     {
         "name": "Pokémon HeartGold",
         "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Pokemon.-.HeartGold.Version.USA.nds",
-        "size": 128
+        "size": 128,
+        "platform": "Nintendo DS"
     },
     {
         "name": "Pokémon Platinum",
         "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Pokemon.-.Platinum.Version.USA.Rev.1.nds",
-        "size": 128
+        "size": 128,
+        "platform": "Nintendo DS"
     },
     {
         "name": "Pokémon SoulSilver",
         "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Pokemon.-.SoulSilver.Version.USA.nds",
-        "size": 128
+        "size": 128,
+        "platform": "Nintendo DS"
     },
     {
         "name": "Sonic Classic Collection",
         "url": "https://github.com/ginklex/ginklex.github.io/releases/download/files/Sonic.Classic.Collection.USA.En.Fr.Es.NDSi.Enhanced.nds",
-        "size": 64
+        "size": 64,
+        "platform": "Nintendo DS"
+    },
+    {
+        "name": "Super Smash Bros. Melee",
+        "url": "https://github.com/ginklex/ginklex.github.io/releases/download/file_gc1/Super.Smash.Bros.Melee.USA.En.Ja.Rev.2.rvz",
+        "size": 1360.8,
+        "platform": "Nintendo GameCube"
     }
 ];
     const status = document.getElementById("download-status");
@@ -719,7 +730,7 @@ renderDSKeys();
         heading.textContent = file.name;
         const description = document.createElement("p");
         description.className = "download-description";
-        description.textContent = "Nintendo DS · " + file.size + " MiB";
+        description.textContent = file.platform + " · " + file.size + " MiB";
         const link = document.createElement("a");
         link.className = "button";
         link.href = file.url;
