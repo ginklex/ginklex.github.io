@@ -40,6 +40,7 @@ body { background-color:#182421; background-image:linear-gradient(#0a1416b3,#0a1
   <body>
 <div style="padding:12px 20px;background:#182421;color:#f2eee5;display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-family:Arial,sans-serif;">
 <a href="../index.html" style="color:#c4d5bd;">← Game Hub</a>
+<a href="?video=software&amp;presenter=webgl" style="color:#c4d5bd;">Software fallback</a>
 <span id="hub-gc-status" role="status">Checking GameCube browser support…</span>
 </div>
     <div class="app-shell">
@@ -433,17 +434,32 @@ body { background-color:#182421; background-image:linear-gradient(#0a1416b3,#0a1
                             
                             <script type="module">
 const message = document.getElementById('hub-gc-status');
-if (!crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
-    message.textContent = 'Preparing browser threading. This page may reload once. If it stays here, check the Console for service-worker errors.';
-} else {
+const url = new URL(location.href);
+if (!url.searchParams.has('video')) url.searchParams.set('video', 'wgpu');
+if (!url.searchParams.has('presenter')) url.searchParams.set('presenter', url.searchParams.get('video') === 'software' ? 'webgl' : 'webgpu');
+history.replaceState(null, '', url);
+const hardware = ['wgpu', 'webgpu-real', 'webgpu2'].includes(url.searchParams.get('video'));
+async function startPlayer() {
+    if (!crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
+        message.textContent = 'Preparing browser threading. This page may reload once. If it stays here, check the Console for service-worker errors.';
+        return;
+    }
     try {
+        if (hardware) {
+            if (!navigator.gpu) throw new Error('WebGPU is unavailable in this browser. Enable Chrome graphics acceleration.');
+            const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) throw new Error('Chrome could not obtain a WebGPU adapter.');
+        }
         await import('./src/bootstrap.js');
-        message.textContent = 'Experimental GameCube player · WebGL / Canvas display. Choose Open Disc to select a local game.';
+        message.textContent = hardware
+            ? 'Experimental WebGPU hardware rendering selected. Choose Open Disc. Speed and graphics vary by game.'
+            : 'Software renderer selected. Choose Open Disc.';
     } catch (error) {
         console.error('Game Hub GameCube startup failed:', error);
         message.textContent = 'Player startup failed: ' + error.message;
     }
 }
+await startPlayer();
 </script>
                             </body>
                             </html>
